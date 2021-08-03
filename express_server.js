@@ -14,9 +14,21 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+// route to handle shortURL requests
+
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase.b2xVn2;
+  res.redirect(longURL);
+});
+
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  const shortUrl = generateRandomString()
+  urlDatabase[shortUrl] = req.body.longURL
+  res.redirect(`/urls/${shortUrl}`);
+  
+  //console.log(req.body);  // Log the POST request body to the console
+  //res.send("Ok");         // Respond with 'Ok' (we will replace this)
 });
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
