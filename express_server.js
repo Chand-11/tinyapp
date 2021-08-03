@@ -17,15 +17,36 @@ const urlDatabase = {
 
 // route to handle shortURL requests
 
+
+
+//Delete functionality
+app.post('/urls/:shortURL/delete', (req, res) => {
+
+  console.log("DELETE HERE");
+  // extract the id from the url
+  // req.params
+  const quoteId = req.params.shortURL;
+  console.log(quoteId);
+  // delete it from the db
+  delete urlDatabase[quoteId];
+
+  // redirect to /quotes
+  res.redirect('/urls');
+
+});
+
+app.post('/urls', (req, res) => {
+  const shortUrl = generateRandomString()
+  urlDatabase[shortUrl] = req.body.longURL
+  res.redirect(`/urls/${shortUrl}`);
+
+
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase.b2xVn2;
   res.redirect(longURL);
 });
 
-app.post("/urls", (req, res) => {
-  const shortUrl = generateRandomString()
-  urlDatabase[shortUrl] = req.body.longURL
-  res.redirect(`/urls/${shortUrl}`);
+
   
   //console.log(req.body);  // Log the POST request body to the console
   //res.send("Ok");         // Respond with 'Ok' (we will replace this)
