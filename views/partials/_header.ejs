@@ -10,15 +10,21 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
+    <div class="navbar-nav ml-auto my-auto">
               <% if (!user) { %>
+               
                 <a href="/login"><button>Login</button></a>
                 <a href="/register"><button>Register</button></a>
+           
+
                 <% } else { %>
+
               <%= 'logged in as: ' + user['email'] %> 
                   <form method="POST" action="/logout">
                   <button type="submit" >Log out</button>
                 </form>
                 <% } %>
-       
+
+  </div>      
   </nav>
 </header>

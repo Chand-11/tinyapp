@@ -8,12 +8,12 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
   <title>TinyApp</title>
 </head>
-<body>
+<body class="text-center">
   <header>
   <%- include('partials/_header') %>
 </header>
   <main style="margin: 1em;">
-    <h3>My URLs</h3>
+      <h3>My URLs</h3>
     <table class="table">
       <thead>
         <tr>
@@ -27,14 +27,20 @@
         <% for(let url in urls) { %>
           <tr>
             <td><%= url %></td>
-            <td><%= urls[url] %></td>
-            <td><form method="POST" action="/urls/<%= url %>/Edit">
+            <td><%= urls[url].longURL %></td>
+            <td>
+              <form method="POST" action="/urls/<%= url %>/Edit">
               <button type="submit" class="btn btn-outline-danger">Edit</button>
-            <td><form method="POST" action="/urls/<%= url %>/delete">
+              </form>
+              </td>
+            <td>
+              <form method="POST" action="/urls/<%= url %>/delete">
               <button type="submit" class="btn btn-outline-danger">Delete</button>
-              </form></td>
+              </form>
+            </td>
           </tr>
         <% } %>
+    
       </tbody>
     </table>
   </main>
