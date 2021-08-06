@@ -43,32 +43,36 @@ app.get("/urls/new", (req, res) => {
   const user = users[userid];
   const templateVars = { urls: urlDatabase, user: user };
   if (!templateVars.user) {
-    res.render("login");
+    return res.status(400).redirect('/login');
   }
-  res.render('urls_new', templateVars);
+
+  res.render("urls_new", templateVars);
 });
+
 //POST Login Route --urls
 app.post('/login', (req, res) => {
   let email = req.body.email;
   let password = req.body.password;
-  let user = getUserByEmail(email, users);
-  let checkPass = bcrypt.compareSync(password, users[user].password);
-  if(checkPass) {
-    req.session.user_id = user;
-    res.redirect(`/urls`);
-  } else {
-  // invalid password or email
-  res.status(403).send("Invalid email or password");
+  let userid = getUserByEmail(email, users);
+  //console.log("userid:" + userid);
+  let checkPass = bcrypt.compareSync(password, users[userid].password);
+  if (!userid) {
+    return res.status(403).send("<html><script>setTimeout(() => { window.location.href='/login'}, 3000)</script><title>Login Error</title><body><h3>Sorry, Email does not exist. Please try again.<a href='/login'> Try again </a></body></html>");
+  } else if (!checkPass) {
+    return res.status(403).send("<html><script>setTimeout(() => { window.location.href='/login'}, 3000)</script><title>Login Error</title><body><h3>Sorry, Password is invalid. Please check your password<a href='/login'> Try again </a></body></html>");
   }
+  else {
+    req.session.user_id = userid;
+    res.redirect(`/urls`);
+  } 
+ 
 });
 // GET LOGIN: 
 app.get('/login', (req, res) => {
   if (req.session.user_id) {
     res.redirect('/urls');
-  }
-  const templateVars = {
-    user: users[req.session.user_id]
-  };
+    }
+  const templateVars = {urls: urlDatabase, user: users[req.session.user_id] };
   res.render('login',templateVars);
 });
 
@@ -95,60 +99,41 @@ app.post('/register', (req, res) => {
       res.status(400).send("This email is already registered in our system");
     }
   }
+  //console.log("/register- Id:" + id);
   users[id] = { id: id, email:email, password: hashedPassword};
-  req.session.userId = id;
+  req.session.user_id = id;
   res.redirect('/urls');
 });
 
 app.get('/register', (req, res) => {
   if (req.session.user_id) {
     res.redirect('/urls');
-  }
-  const templateVars = { urls: urlDatabase, user: user };
+    }
+  const templateVars = {urls: urlDatabase, user: null};
   res.render("register", templateVars);
 });
  
 
 // GET request: redirection of the shortURL into the longURL
 app.get('/u/:shortURL', (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   if (!longURL) {
-    return res.status(404).send("This short URL is not valid/exist.Check existing short URL");
+    return res.status(404).send("<html><title>Invalid URL</title><body><h3>Short URL code does not exist. Check existing short URLs.<a href='/urls'> Try again </a></body></html>");
   } 
-  res.redirect(longURL.longURL);
+  res.redirect(longURL);
   
 
 });
-//Update functionality
-app.post('/urls/:shortURL', (req, res) => {
 
-  //console.log("PARAMS", req.params);
-
-  const shortURL = req.params.shortURL;
-  const userid = req.session.userId;
-  const user = users[userid];
-  if (userid === shortURL.userId) {
-    //extract new url value from the form => req.body
-    const updatedURL = req.body.longURL;
-    //update the quote content for that id
-    shortURL.longURL = updatedURL;
-    res.redirect('/urls');
-  } else {
-    return res.status(401).send('You can\'t do that! \n');
-  }
-
-});
-
-app.get("/urls/:shortURL/edit", (req, res) => {
+/* app.get("/urls/:shortURL/edit", (req, res) => {
   let shortURL = req.params.shortURL;
   res.redirect(`/urls/${shortURL}`);
-});
+}); */
 
 //Delete functionality
 app.post('/urls/:shortURL/delete', (req, res) => {
   let id = req.session.user_id;
-
-  if (urlDatabase[req.params.shortURL]["userID"] === id) {
+  if (urlDatabase[req.params.shortURL]["userId"] === id) {
     delete urlDatabase[req.params.shortURL];
     res.redirect('/urls');
   }
@@ -157,30 +142,53 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   }
 });
 
+//Update functionality
+app.post('/urls/:shortURL', (req, res) => {
+  const shortURL = req.params.shortURL;
+  const longURL = req.body["longURL"];
+  const userid = req.session.user_id;
+  const user = users[userid];
+  urlDatabase[shortURL] = {longURL : longURL, userId: userid};
+  res.redirect("/urls");
+});
+
 
 // GET request: redirection of the shortURL into the longURL
 app.get("/urls/:shortURL", (req, res) => {
- const templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL].longURL,
-    user: users[req.session.user_id]
+ const shortURL = req.params.shortURL;
+ const longURL = urlDatabase[req.params.shortURL].longURL;
+ const userId = req.session.userId;
+ user =users[req.session.user_id];
+ 
+  const templateVars = {
+    shortURL,
+    longURL,
+    user
   }; 
-  res.render("urls_show", templateVars);
+  if (users[req.session.user_id]) {
+    if (urlDatabase[shortURL] && userId === urlDatabase[shortURL].user_id) {
+      return res.render("urls_show", templateVars);
+    }
+    return res.send("<html><title>Access Error</title><body><h3>This url does not belong to you.<a href='/login'> Login </a></body></html>")
+  } 
+  res.send("<html><title>Access Error</title><body><h3>Please login first.<a href='/login'> Login </a></body></html>");
 });
 
 
 // GET request to render urls_index HTML path with data passed in tempVars
 app.get("/urls", (req, res) => {
   const userid = req.session.user_id;
-  console.log(userid);
+  // console.log("/urls userid:" + userid);
   const user = users[userid];
   // if user is not logged in: redirect to login
   if (!req.session.user_id) {
     res.send('You must be logged in to see the URLs.');
-    res.redirect('/login');
+    //res.redirect('/login');
   }
+  // console.log("URL database:" + urlDatabase);
+  // console.log("our urls database:" + Object.keys(urlsForUser(userid, urlDatabase)));
+  
 
-  // if user is not logged in: redirect to login
     const templateVars = { user: user, urls: urlsForUser(userid, urlDatabase), shortURL: req.params.shortURL };
 
     res.render("urls_index", templateVars);
@@ -196,12 +204,21 @@ app.post('/urls', (req, res) => {
   }
   const userid = req.session.user_id;
   urlDatabase[shortUrl] = { longURL: req.body.longURL, userId: userid };
-  res.redirect(`/urls/${shortUrl}`);
+  res.redirect(`/urls`);
+  //res.redirect(`/urls/${shortUrl}`);
 });
 
 
 app.get('/404', (req, res) => {
   res.send("The page you are looking for cannot be found.");
+});
+
+app.get('/', (req, res) => {
+  if (users[req.session.user_id]){  
+  res.redirect('/urls');
+  }else {
+  res.redirect('/urls');
+  }
 });
 
 //Listen on PORT defined in global variable 

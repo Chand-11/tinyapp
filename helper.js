@@ -21,6 +21,16 @@ const getUserByEmail = function(email, database) {
   }
 };
 
+const findURLInDatabase = function(id, database) {
+  for (let url in database) {
+    if (url === id) {
+      return url;
+    }
+  }
+  return false;
+};
 
 
-module.exports = { generateRandomString, getUserByEmail, urlsForUser};
+
+
+module.exports = { generateRandomString, getUserByEmail, urlsForUser,findURLInDatabase};
