@@ -82,7 +82,8 @@ app.post('/login', (req, res) => {
 
 // GET LOGIN: 
 app.get('/login', (req, res) => {
-  if (req.session.user_id === users[req.session.user_id]) {
+ // console.log(req.session.user_id + "&&" + users[req.session.user_id]);
+  if ((req.session.user_id !== undefined) && (!users[req.session.user_id]!==users[req.session.user_id]) && (req.session.user_id === users[req.session.user_id])) {
     res.redirect('/urls');
   }
   const templateVars = { urls: urlDatabase, user: users[req.session.user_id] };
