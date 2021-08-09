@@ -150,13 +150,9 @@ app.get("/urls", (req, res) => {
 
 // GET request: redirection of the shortURL into the longURL
 app.get('/u/:shortURL', (req, res) => {
-  let id = req.session.user_id;
+  
   const shortURL = req.params.shortURL;
-  if(id !== shortURL)
-  {
-    return res.send("<html><title> Error </title><body ><h3>This url does belong to you so you can not access it.</h3></body></html>"
-    );
-  }
+ 
   if (!urlDatabase[shortURL]) {
     return res.send("<html><title> Error </title><body ><h3>This url does not exist.</h3></body></html>"
     );
